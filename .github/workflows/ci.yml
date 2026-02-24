@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install ruff
+      - name: Run ruff check
+        run: ruff check src/ tests/
+      - name: Run ruff format check
+        run: ruff format --check src/ tests/
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          python -m spacy download en_core_web_sm
+      - name: Run tests
+        run: pytest tests/ -v --cov=src --cov-report=xml --cov-fail-under=80
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -t contract-review .
+      - name: Test Docker image
+        run: |
+          docker run -d -p 8501:8501 --name test-app contract-review
+          sleep 10
+          curl --fail http://localhost:8501/_stcore/health || exit 1
+          docker stop test-app

@@ -32,6 +32,11 @@ data/raw/
 .DS_Store
 Thumbs.db
 
+# Coverage
+.coverage
+coverage.xml
+htmlcov/
+
 # Logs
 *.log
 
