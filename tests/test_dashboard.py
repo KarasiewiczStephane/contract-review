@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from src.dashboard.app import get_llm_client, init_session_state
+from src.dashboard.app import _build_markdown_report, get_llm_client, init_session_state
 
 
 @patch("src.dashboard.app.load_config")
@@ -79,3 +79,45 @@ def test_init_session_state_preserves_existing(mock_st: MagicMock) -> None:
     init_session_state()
     assert mock_st.session_state.analyzed is True
     assert mock_st.session_state.cost_tracker == "existing"
+
+
+def test_build_markdown_report() -> None:
+    """Test markdown report generation."""
+    metadata = MagicMock()
+    metadata.parties = ["Acme Corp", "Widget Inc"]
+    metadata.effective_date = "2024-01-15"
+    metadata.governing_law = "California"
+    metadata.contract_type = "service"
+
+    risk_report = MagicMock()
+    risk_report.overall_score = 65.0
+    risk_report.risk_level = "medium"
+    risk_report.missing_clauses = ["liability"]
+    risk_report.recommendations = ["Add liability clause"]
+
+    md = _build_markdown_report(metadata, risk_report)
+    assert "Contract Analysis Report" in md
+    assert "Acme Corp" in md
+    assert "California" in md
+    assert "65.0/100" in md
+    assert "liability" in md
+    assert "Add liability clause" in md
+
+
+def test_build_markdown_report_no_missing() -> None:
+    """Test markdown report with no missing clauses."""
+    metadata = MagicMock()
+    metadata.parties = ["A"]
+    metadata.effective_date = None
+    metadata.governing_law = None
+    metadata.contract_type = None
+
+    risk_report = MagicMock()
+    risk_report.overall_score = 30.0
+    risk_report.risk_level = "low"
+    risk_report.missing_clauses = []
+    risk_report.recommendations = []
+
+    md = _build_markdown_report(metadata, risk_report)
+    assert "Contract Analysis Report" in md
+    assert "Missing Clauses" not in md
