@@ -1,0 +1,21 @@
+rules:
+  - id: gdpr_1
+    name: Data Processing Terms
+    description: Contract should specify data processing purposes
+    required_keywords: ["data process", "personal data", "gdpr"]
+    category: GDPR
+  - id: gdpr_2
+    name: Data Subject Rights
+    description: Must reference data subject rights
+    required_keywords: ["data subject", "right to access", "erasure"]
+    category: GDPR
+  - id: std_1
+    name: Limitation of Liability
+    description: Should include liability cap
+    required_keywords: ["limitation of liability", "liability cap"]
+    category: Standard
+  - id: std_2
+    name: Termination Clause
+    description: Should specify termination conditions
+    required_keywords: ["termination", "terminate", "cancellation"]
+    category: Standard
