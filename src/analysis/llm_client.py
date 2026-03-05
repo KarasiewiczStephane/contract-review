@@ -27,6 +27,66 @@ class LLMClient(ABC):
         """
 
 
+class DemoClient(LLMClient):
+    """Demo client that returns simulated LLM responses without API calls."""
+
+    CLAUSE_TYPES = [
+        "confidentiality", "termination", "indemnification", "liability",
+        "payment", "ip_ownership", "non_compete", "dispute_resolution",
+        "force_majeure", "renewal",
+    ]
+
+    RISK_REASONING = {
+        "high": [
+            "Unlimited liability exposure with no cap on damages",
+            "Non-compete clause is overly broad in scope and duration",
+            "Indemnification is one-sided with no mutual obligation",
+            "Automatic renewal with no opt-out mechanism",
+        ],
+        "medium": [
+            "Standard termination clause but notice period is short",
+            "Confidentiality obligations survive indefinitely",
+            "Payment terms favor one party with late penalty clause",
+            "IP assignment clause could be interpreted broadly",
+        ],
+        "low": [
+            "Standard mutual confidentiality with reasonable scope",
+            "Clear dispute resolution process with arbitration",
+            "Force majeure clause covers standard scenarios",
+            "Governing law and jurisdiction are clearly defined",
+        ],
+    }
+
+    def __init__(self) -> None:
+        self.provider = "demo"
+        self._call_count = 0
+
+    def complete(self, prompt: str, system: str = "") -> str:
+        import json as _json
+        import hashlib
+
+        text_hash = int(hashlib.md5(prompt.encode()).hexdigest(), 16)
+        idx = text_hash % len(self.CLAUSE_TYPES)
+        clause_type = self.CLAUSE_TYPES[idx]
+
+        risk_levels = ["low", "medium", "high"]
+        risk_level = risk_levels[self._call_count % 3]
+        reasoning_list = self.RISK_REASONING[risk_level]
+        reasoning = reasoning_list[self._call_count % len(reasoning_list)]
+        self._call_count += 1
+
+        result = {
+            "clause_type": clause_type,
+            "risk_level": risk_level,
+            "risk_reasoning": reasoning,
+            "key_terms": ["30 days notice", "12 months", "Delaware law"],
+            "summary": f"This {clause_type.replace('_', ' ')} clause defines obligations "
+                       f"between the parties. Risk level: {risk_level}.",
+        }
+        logger.info("Demo client returning simulated response for %s", clause_type)
+        return _json.dumps(result)
+
+
 class OpenAIClient(LLMClient):
     """OpenAI API client.
 
@@ -39,7 +99,7 @@ class OpenAIClient(LLMClient):
     def __init__(
         self,
         api_key: str,
-        model: str = "gpt-4",
+        model: str = "gpt-4o-mini",
         temperature: float = 0.0,
     ) -> None:
         from openai import OpenAI
@@ -85,7 +145,7 @@ class AnthropicClient(LLMClient):
     def __init__(
         self,
         api_key: str,
-        model: str = "claude-3-opus-20240229",
+        model: str = "claude-sonnet-4-20250514",
         temperature: float = 0.0,
     ) -> None:
         from anthropic import Anthropic

@@ -6,12 +6,13 @@ contract documents with risk assessment and clause analysis.
 
 import json
 import tempfile
+from pathlib import Path
 
 import streamlit as st
 
 from src.analysis.clause_analyzer import ClauseAnalyzer
 from src.analysis.compliance_checker import ComplianceChecker
-from src.analysis.llm_client import AnthropicClient, OpenAIClient
+from src.analysis.llm_client import AnthropicClient, DemoClient, OpenAIClient
 from src.analysis.risk_scorer import RiskScorer
 from src.comparison.aligner import ClauseAligner
 from src.comparison.diff_generator import DiffGenerator
@@ -33,7 +34,7 @@ def init_session_state() -> None:
         st.session_state.cost_tracker = CostTracker()
 
 
-def get_llm_client(provider: str, model: str) -> OpenAIClient | AnthropicClient:
+def get_llm_client(provider: str, model: str) -> DemoClient | OpenAIClient | AnthropicClient:
     """Create an LLM client based on provider selection.
 
     Args:
@@ -43,6 +44,8 @@ def get_llm_client(provider: str, model: str) -> OpenAIClient | AnthropicClient:
     Returns:
         Configured LLM client instance.
     """
+    if provider.startswith("Demo"):
+        return DemoClient()
     config = load_config()
     if provider == "OpenAI":
         return OpenAIClient(config.openai_api_key, model=model)
@@ -56,12 +59,13 @@ def main() -> None:
 
     with st.sidebar:
         st.header("Settings")
-        provider = st.selectbox("LLM Provider", ["OpenAI", "Anthropic"])
-        models = (
-            ["gpt-4", "gpt-3.5-turbo"]
-            if provider == "OpenAI"
-            else ["claude-3-opus", "claude-3-sonnet"]
-        )
+        provider = st.selectbox("LLM Provider", ["Demo (No API needed)", "Anthropic", "OpenAI"])
+        if provider == "Anthropic":
+            models = ["claude-sonnet-4-20250514", "claude-haiku-4-20250414"]
+        elif provider == "OpenAI":
+            models = ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"]
+        else:
+            models = ["demo"]
         model = st.selectbox("Model", models)
 
         if st.session_state.analyzed:
@@ -104,13 +108,37 @@ def render_upload_tab(provider: str, model: str) -> None:
         model: Selected model.
     """
     st.header("Upload Contract")
+
+    sample_dir = Path(__file__).resolve().parent.parent.parent / "data" / "sample"
+    sample_files = sorted(sample_dir.glob("*.pdf")) if sample_dir.exists() else []
+
     uploaded = st.file_uploader("Choose a PDF file", type=["pdf"])
 
-    if uploaded and st.button("Analyze Contract"):
+    if sample_files:
+        st.markdown("**Or try a sample contract:**")
+        cols = st.columns(len(sample_files))
+        for col, sample in zip(cols, sample_files):
+            with col:
+                if st.button(sample.stem.replace("sample_", "").replace("_", " ").title(), key=sample.name):
+                    st.session_state.sample_path = str(sample)
+                    st.rerun()
+
+    sample_path = st.session_state.pop("sample_path", None)
+    if sample_path:
+        uploaded = None
+        tmp_path = sample_path
+        st.info(f"Using sample: {Path(sample_path).name}")
+    elif uploaded:
+        tmp_path = None
+    else:
+        tmp_path = None
+
+    if (uploaded or sample_path) and (st.button("Analyze Contract") if not sample_path else True):
         with st.spinner("Extracting text..."):
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-                tmp.write(uploaded.read())
-                tmp_path = tmp.name
+            if uploaded and not tmp_path:
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+                    tmp.write(uploaded.read())
+                    tmp_path = tmp.name
 
             extractor = PDFExtractor()
             doc = extractor.extract(tmp_path)
