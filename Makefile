@@ -23,7 +23,7 @@ run:
 	python -m src.main
 
 streamlit:
-	streamlit run src/dashboard/app.py
+	PYTHONPATH=. streamlit run src/dashboard/app.py
 
 docker:
 	docker build -t contract-review .
