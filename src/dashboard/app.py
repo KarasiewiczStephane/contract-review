@@ -34,7 +34,9 @@ def init_session_state() -> None:
         st.session_state.cost_tracker = CostTracker()
 
 
-def get_llm_client(provider: str, model: str) -> DemoClient | OpenAIClient | AnthropicClient:
+def get_llm_client(
+    provider: str, model: str
+) -> DemoClient | OpenAIClient | AnthropicClient:
     """Create an LLM client based on provider selection.
 
     Args:
@@ -59,7 +61,9 @@ def main() -> None:
 
     with st.sidebar:
         st.header("Settings")
-        provider = st.selectbox("LLM Provider", ["Demo (No API needed)", "Anthropic", "OpenAI"])
+        provider = st.selectbox(
+            "LLM Provider", ["Demo (No API needed)", "Anthropic", "OpenAI"]
+        )
         if provider == "Anthropic":
             models = ["claude-sonnet-4-20250514", "claude-haiku-4-20250414"]
         elif provider == "OpenAI":
@@ -119,7 +123,10 @@ def render_upload_tab(provider: str, model: str) -> None:
         cols = st.columns(len(sample_files))
         for col, sample in zip(cols, sample_files):
             with col:
-                if st.button(sample.stem.replace("sample_", "").replace("_", " ").title(), key=sample.name):
+                if st.button(
+                    sample.stem.replace("sample_", "").replace("_", " ").title(),
+                    key=sample.name,
+                ):
                     st.session_state.sample_path = str(sample)
                     st.rerun()
 
@@ -133,7 +140,9 @@ def render_upload_tab(provider: str, model: str) -> None:
     else:
         tmp_path = None
 
-    if (uploaded or sample_path) and (st.button("Analyze Contract") if not sample_path else True):
+    if (uploaded or sample_path) and (
+        st.button("Analyze Contract") if not sample_path else True
+    ):
         with st.spinner("Extracting text..."):
             if uploaded and not tmp_path:
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:

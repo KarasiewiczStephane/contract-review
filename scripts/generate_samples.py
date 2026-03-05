@@ -377,8 +377,16 @@ Date: February 1, 2025
 
 CONTRACTS = [
     ("sample_nda.pdf", "Non-Disclosure Agreement", NDA_TEXT),
-    ("sample_service_agreement.pdf", "Master Service Agreement", SERVICE_AGREEMENT_TEXT),
-    ("sample_employment_contract.pdf", "Employment Agreement", EMPLOYMENT_CONTRACT_TEXT),
+    (
+        "sample_service_agreement.pdf",
+        "Master Service Agreement",
+        SERVICE_AGREEMENT_TEXT,
+    ),
+    (
+        "sample_employment_contract.pdf",
+        "Employment Agreement",
+        EMPLOYMENT_CONTRACT_TEXT,
+    ),
 ]
 
 
@@ -397,7 +405,12 @@ def generate_pdf(filename: str, title: str, text: str) -> Path:
         paragraph = paragraph.strip()
         if not paragraph:
             continue
-        if paragraph.isupper() or (paragraph[0].isdigit() and paragraph.split(".")[0].isdigit() and len(paragraph) < 80 and "\n" not in paragraph):
+        if paragraph.isupper() or (
+            paragraph[0].isdigit()
+            and paragraph.split(".")[0].isdigit()
+            and len(paragraph) < 80
+            and "\n" not in paragraph
+        ):
             pdf.set_font("Helvetica", "B", 11)
             pdf.multi_cell(0, 5, paragraph)
             pdf.set_font("Helvetica", "", 10)

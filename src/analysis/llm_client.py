@@ -31,9 +31,16 @@ class DemoClient(LLMClient):
     """Demo client that returns simulated LLM responses without API calls."""
 
     CLAUSE_TYPES = [
-        "confidentiality", "termination", "indemnification", "liability",
-        "payment", "ip_ownership", "non_compete", "dispute_resolution",
-        "force_majeure", "renewal",
+        "confidentiality",
+        "termination",
+        "indemnification",
+        "liability",
+        "payment",
+        "ip_ownership",
+        "non_compete",
+        "dispute_resolution",
+        "force_majeure",
+        "renewal",
     ]
 
     RISK_REASONING = {
@@ -81,7 +88,7 @@ class DemoClient(LLMClient):
             "risk_reasoning": reasoning,
             "key_terms": ["30 days notice", "12 months", "Delaware law"],
             "summary": f"This {clause_type.replace('_', ' ')} clause defines obligations "
-                       f"between the parties. Risk level: {risk_level}.",
+            f"between the parties. Risk level: {risk_level}.",
         }
         logger.info("Demo client returning simulated response for %s", clause_type)
         return _json.dumps(result)
