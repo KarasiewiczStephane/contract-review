@@ -123,6 +123,11 @@ make lint-fix   # Auto-fix style issues
 make clean      # Remove __pycache__ and .pyc files
 ```
 
+
+## Author
+
+**Stéphane Karasiewicz** — [skarazdata.com](https://skarazdata.com) | [LinkedIn](https://www.linkedin.com/in/stephane-karasiewicz/)
+
 ## License
 
 MIT
